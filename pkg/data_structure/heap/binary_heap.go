@@ -2,57 +2,57 @@ package heap
 
 import (
 	"fmt"
+
 	ADT "github.com/nathan-tw/algo/pkg/abstact_data_type"
 )
-
-type HeapNode map[int]int
-
-func (hn HeapNode) Min(a, b int) (index int) {
-	if hn[a] > hn[b] {
-		return b
-	}
-	return a
-}
 
 type Heap struct {
 	ADT.PriorityQueue
 	Nodes HeapNode
 }
 
-func NewBinaryHeapWithElem(elements []int) *Heap {
-	hp := new(Heap)
-	m := make(HeapNode)
-	for index, ele := range elements {
-		m[index+1] = ele
+type HeapNode []int
+
+func (hn HeapNode) min(i1, i2 int) (index int) {
+	if hn[i1] > hn[i2] {
+		return i2
 	}
-	hp.Nodes = m
-	return hp
+	return i1
 }
 
-func NewBinaryHeap() *Heap {
-	hp := new(Heap)
-	return hp
+func NewBinaryHeap(elements []int) *Heap {
+	nodes := make([]int, 1)
+	nodes = append(nodes, elements...)
+	return &Heap{
+		Nodes: nodes,
+	}
 }
 
-func (hp *Heap) MinHeapify(key int) {
-	minKey := key
-	for key*2 <= len(hp.Nodes) {
-		// if only left child
-		if _, ok := hp.Nodes[key*2+1]; !ok {
-			// swap
-			minKey = hp.Nodes.Min(key, key*2)
-			if minKey != key {
-				hp.Nodes[key], hp.Nodes[minKey] = hp.Nodes[minKey], hp.Nodes[key]
+func (hp *Heap) PrintHeap() {
+	for i := 1; i < len(hp.Nodes); i++ {
+		fmt.Println(hp.Nodes[i])
+	}
+}
+
+func (hp *Heap) minHeapify(index int) {
+	minIndex := index
+	for index*2 <= len(hp.Nodes)-1 {
+		// if only left node exist
+		if index*2+1 > len(hp.Nodes)-1 {
+			minIndex = hp.Nodes.min(index, index*2)
+			if minIndex != index {
+				// swap
+				hp.Nodes[index], hp.Nodes[minIndex] = hp.Nodes[minIndex], hp.Nodes[index]
 				return
 			} else {
 				return
 			}
 		} else {
-			minKey = hp.Nodes.Min(key*2, key*2+1)
-			minKey = hp.Nodes.Min(key, minKey)
-			if minKey != key {
-				hp.Nodes[key], hp.Nodes[minKey] = hp.Nodes[minKey], hp.Nodes[key]
-				key = minKey
+			minIndex = hp.Nodes.min(index*2, index*2+1)
+			minIndex = hp.Nodes.min(index, minIndex)
+			if minIndex != index {
+				hp.Nodes[index], hp.Nodes[minIndex] = hp.Nodes[minIndex], hp.Nodes[index]
+				index = minIndex
 			} else {
 				return
 			}
@@ -61,46 +61,38 @@ func (hp *Heap) MinHeapify(key int) {
 }
 
 func (hp *Heap) BuildMinHeap() {
-	for key := len(hp.Nodes); key >= 1; key-- {
-		hp.MinHeapify(key)
+	for index := len(hp.Nodes)-1; index >= 1; index-- {
+		hp.minHeapify(index)
 	}
-}
-
-func (hp *Heap) Insert(input int) {
-	maxKey := len(hp.Nodes) + 1
-	hp.Nodes[maxKey] = input
-	for maxKey != 1 {		
-		if hp.Nodes[maxKey] < hp.Nodes[maxKey/2] {
-			hp.Nodes[maxKey], hp.Nodes[maxKey/2] = hp.Nodes[maxKey/2], hp.Nodes[maxKey]
-			maxKey /= 2
-		} else{
-			return
-		}
-	} 	
 }
 
 func (hp *Heap) GetMinimum() int {
 	return hp.Nodes[1]
 }
 
-func (hp *Heap) ExtractMin() int {
-	min := hp.Nodes[1]
-	length := len(hp.Nodes)
-	hp.Nodes[1] = hp.Nodes[length]
-	delete(hp.Nodes, length)
-	hp.MinHeapify(1)
+func (hp *Heap) Insert(input int) {
+	maxIndex := len(hp.Nodes)
+	hp.Nodes = append(hp.Nodes, input)
+	for maxIndex != 1 {		
+		if hp.Nodes[maxIndex] < hp.Nodes[maxIndex/2] {
+			hp.Nodes[maxIndex], hp.Nodes[maxIndex/2] = hp.Nodes[maxIndex/2], hp.Nodes[maxIndex]
+			maxIndex /= 2
+		} else{
+			return
+		}
+	} 	
+}
 
-	return min
+func (hp *Heap) ExtractMin() int {
+	// replace the min with the least index element
+	minNode := hp.Nodes[1]
+	last := len(hp.Nodes)-1
+	hp.Nodes[1] = hp.Nodes[last]
+	hp.Nodes = hp.Nodes[:last]
+	return minNode
 }
 
 func (hp *Heap) IncreaseKey(index int, incr int) {
 	hp.Nodes[index] += incr
-	hp.MinHeapify(index)
-}
-
-func (hp *Heap) PrintNodes() {
-	for k, v := range hp.Nodes {
-		fmt.Println(k,v)
-	}
-	fmt.Println()
+	hp.minHeapify(index)
 }
